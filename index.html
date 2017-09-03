@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>谷歌收益计算器</title>
+    <link href="favicon.ico" rel="shortcut icon" type="image/x-icon">
+    <style type="text/css">
+    input[readonly] {
+        border: none;
+    }
+    </style>
+</head>
+
+<body>
+    <h1 style="display:inline">谷歌收益计算器</h1> <a href="javascript:void(0)" onclick="switchType()">切换模式</a>
+    <div style="max-width: 380px;width: 100%; line-height:2em;">
+        <fieldset>
+            <div>总金额（$）：
+                <input id="total" type="number" required oninput="update()" placeholder="账户总收益金额" />
+                <em>*</em>
+            </div>
+            <div>谷歌无效（$）：
+                <input id="deduction" type="number" required oninput="update()" placeholder="谷歌扣除的无效流量收益" />
+                <em>*</em>
+            </div>
+            <div>有效比例：
+                <input id="valid" type="number" readonly oninput="update()" placeholder="扣除无效流量后收益占比" />
+                <em></em>
+            </div>
+            <div>汇率（$->￥）：
+                <input id="rate" type="number" required oninput="update()" placeholder="美元兑人民币实时汇率" />
+                <em>*</em>
+            </div>
+        </fieldset>
+        <fieldset>
+            <div>渠道收益（$）：
+                <input id="channel" type="number" required oninput="update()" placeholder="渠道总收益" />
+                <em>*</em>
+            </div>
+            <div>分成比例：
+                <input id="proportion" type="number" required oninput="update()" placeholder="渠道分成比例" />
+                <em>*</em>
+            </div>
+        </fieldset>
+        <fieldset>
+            <div>美元（$）：
+                <input id="dollar" type="number" readonly placeholder="美元分成所得">
+            </div>
+            <div>人民币（￥）：
+                <input id="rmb" type="number" readonly placeholder="人民币分成所得" />
+            </div>
+        </fieldset>
+    </div>
+    <script type="text/javascript">
+    function changeType(t)
+    {
+        if (!t)
+        {
+            return;
+        }
+        type = t;
+        update();
+    }
+
+    function switchType()
+    {
+        changeType(type == 1 ? 2 : 1);
+    }
+
+    function $(id)
+    {
+        return document.getElementById(id);
+    }
+    var delay = 0;
+
+    function getJSON()
+    {
+        var a = ["rate", "channel", "proportion"];
+        switch (type)
+        {
+            case "2":
+            case 2:
+                a.unshift("valid");
+                break;
+            default:
+                a.unshift("total", "deduction");
+                break;
+        }
+        var b = {
+            type: type + ""
+        };
+        for (var i = 0; i < a.length; i++)
+        {
+            var key = a[i];
+            var value = getValue(key);
+            if (value)
+            {
+                b[key] = value;
+            }
+        }
+        return b;
+    }
+
+    function getURL()
+    {
+        var b = [];
+        var data = getJSON();
+        for (var i in data)
+        {
+            b.push(i + "=" + data[i]);
+        }
+        return location.href.replace(location.search, "").replace(location.hash, "") + (b.length ? "?" + b.join("&") : "");
+    }
+
+    function getSearch()
+    {
+        var a = location.search.slice(1).split("&");
+        var o = {};
+        for (var s in a)
+        {
+            var aa = a[s].split("=");
+            var key = aa.shift();
+            var value = aa.join("=");
+            try
+            {
+                o[key] = decodeURIComponent(value);
+            }
+            catch (err)
+            {
+                o[key] = value;
+            }
+        }
+        return o;
+    }
+
+    function getValue(id)
+    {
+        return parseFloat($(id).value);
+    }
+
+    function setValue(id, value)
+    {
+        var i = $(id);
+        i && (i.value = isNaN(value) ? '' : value.toString());
+    }
+
+    function update()
+    {
+        var rate = getValue("rate");
+        var channel = getValue("channel");
+        var proportion = getValue("proportion");
+        var valid = NaN;
+        switch (type)
+        {
+            case "2":
+            case 2:
+                $("total").parentNode.style.display = 'none';
+                $("deduction").parentNode.style.display = 'none';
+                $("valid").readOnly = false;
+                $("valid").required = true;
+                $("valid").nextElementSibling.textContent = "*";
+                valid = getValue("valid");
+                break;
+            default:
+                $("total").parentNode.style.display = 'block';
+                $("deduction").parentNode.style.display = 'block';
+                $("valid").readOnly = true;
+                $("valid").required = false;
+                $("valid").nextElementSibling.textContent = "";
+                var total = getValue("total") || 0;
+                var deduction = getValue("deduction") || 0;
+                valid = total && deduction ? (1 - deduction / total) : NaN;
+                setValue("valid", valid);
+                break;
+        }
+        var dollar = channel * valid * proportion;
+        setValue("dollar", dollar);
+        var rmb = dollar * rate;
+        setValue("rmb", rmb);
+        if (getURL() != last)
+        {
+            last = getURL();
+            history.pushState(getJSON(), "", last);
+        }
+    }
+
+    var type = 1;
+    var last = getURL();
+
+    (function()
+    {
+        var s = getSearch();
+        type = s.type || type;
+        for (var i in s)
+        {
+            setValue(i, s[i]);
+        }
+        update();
+    })();
+    </script>
+</body>
+
+</html>
