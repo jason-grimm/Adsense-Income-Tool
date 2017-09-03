@@ -15,7 +15,7 @@
 </head>
 
 <body>
-    <h1 style="display:inline">谷歌收益计算器</h1> <a href="javascript:void(0)" onclick="switchType()">切换模式</a>
+    <h1 style="display:inline">谷歌收益计算器</h1> <a href="javascript:void(0)" onclick="switchType()">切换模式</a> <a id="qr_button" href="javascript:void(0)" onclick="showQR()">显示二维码</a>
     <div style="max-width: 380px;width: 100%; line-height:2em;">
         <fieldset>
             <div>总金额（$）：
@@ -55,6 +55,23 @@
         </fieldset>
     </div>
     <script type="text/javascript">
+    function createQR(text, size)
+    {
+        var ps = ['text=' + encodeURIComponent(text)];
+        size && ps.push('w=' + size);
+        return 'http://qr.liantu.com/api.php?' + ps.join('&');
+    }
+
+    function showQR()
+    {
+        var size = 300;
+        var url = createQR(getURL(), size);
+        if (window.showModalDialog)
+        {
+            window.showModalDialog(url, null, "dialogHeight:" + size + "px; dialogWidth:" + size + "px;");
+        }
+    }
+
     function changeType(t)
     {
         if (!t)
@@ -74,7 +91,6 @@
     {
         return document.getElementById(id);
     }
-    var delay = 0;
 
     function getJSON()
     {
@@ -186,10 +202,8 @@
             history.pushState(getJSON(), "", last);
         }
     }
-
     var type = 1;
     var last = getURL();
-
     (function()
     {
         var s = getSearch();
@@ -199,6 +213,7 @@
             setValue(i, s[i]);
         }
         update();
+        $('qr_button').style.display = window.showModalDialog ? 'inline' : 'none';
     })();
     </script>
 </body>
