@@ -4,7 +4,6 @@
 * 输入数值后地址栏的URL会自动变化（现代浏览器），可以直接复制此URL分享
 
 测试地址：[点击查看](https://jason-grimm.github.io/Adsense-Income-Tool/index.html "Adsense收益计算器"){:target="_blank"}
-
 ## 1.模式一
 根据账号总金额和扣除无效流量计算出有效收益的比例
 ## 2.模式二
